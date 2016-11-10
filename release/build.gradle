@@ -1,0 +1,88 @@
+apply plugin: 'com.android.library'
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+archivesBaseName = "webrtc-android"
+version          = version_number
+group            = group_info
+
+android {
+    compileSdkVersion 24
+    buildToolsVersion "24.0.2"
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['libs']
+        }
+    }
+
+
+    libraryVariants.all { variant ->
+        variant.outputs.each { output ->
+            def outputFile = output.outputFile
+            if (outputFile != null && outputFile.name.endsWith('.aar')) {
+                def fileName = "${archivesBaseName}-${version}.aar"
+                output.outputFile = new File(outputFile.parent, fileName)
+            }
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    testCompile 'junit:junit:4.12'
+}
+
+signing {
+    required { has("release") && gradle.taskGraph.hasTask("uploadArchives") }
+    sign configurations.archives
+}
+
+uploadArchives {
+    configuration = configurations.archives
+    repositories.mavenDeployer {
+        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+        repository(url: sonatypeRepo) {
+            authentication(userName: whisperSonatypeUsername, password: whisperSonatypePassword)
+        }
+
+        pom.project {
+            name 'webrtc-android'
+            packaging 'aar'
+            description 'WebRTC for Android'
+            url 'https://github.com/WhisperSystems/libwebrtc-android'
+
+	    scm {
+	      url 'scm:git@github.com:WhisperSystems/libwebrtc-android.git'
+	      connection 'scm:git@github.com:WhisperSystems/libwebrtc-android.git'
+	      developerConnection 'scm:git@github.com:WhisperSystems/libwebrtc-android.git'	      
+	    }
+
+            licenses {
+                license {
+                    name 'GPLv3'
+                    url 'https://www.gnu.org/licenses/gpl-3.0.txt'
+                    distribution 'repo'
+                }
+            }
+
+            developers {
+                developer {
+                    name 'Moxie Marlinspike'
+                }
+            }
+        }
+    }
+}
+
+task installArchives(type: Upload) {
+    description "Installs the artifacts to the local Maven repository."
+    configuration = configurations['archives']
+    repositories {
+        mavenDeployer {
+            repository url: "file://${System.properties['user.home']}/.m2/repository"
+        }
+    }
+}
+
