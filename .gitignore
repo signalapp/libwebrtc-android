@@ -10,3 +10,4 @@ gradle.properties
 /build
 /captures
 .externalNativeBuild
+*.tgz
