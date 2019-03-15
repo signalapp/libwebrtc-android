@@ -16,7 +16,7 @@ allprojects {
 }
 
 subprojects {
-    ext.version_number     = "M72-S2"
+    ext.version_number     = "M73"
     ext.group_info         = "org.whispersystems"
 
     if (JavaVersion.current().isJava8Compatible()) {
